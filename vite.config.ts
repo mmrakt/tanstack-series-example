@@ -1,33 +1,39 @@
+import { fileURLToPath, URL } from "node:url";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
-import { fileURLToPath, URL } from "url";
 import { defineConfig } from "vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 
-const config = defineConfig({
-	resolve: {
-		alias: {
-			"@": fileURLToPath(new URL("./src", import.meta.url)),
-		},
-	},
-	plugins: [
-		devtools(),
-		cloudflare({ viteEnvironment: { name: "ssr" } }),
-		// this is the plugin that enables path aliases
-		viteTsConfigPaths({
-			projects: ["./tsconfig.json"],
-		}),
-		tailwindcss(),
-		tanstackStart(),
-		viteReact({
-			babel: {
-				plugins: ["babel-plugin-react-compiler"],
-			},
-		}),
-	],
-});
+export default defineConfig(({ command }) => {
+	const useCloudflare =
+		command === "build" || process.env.CF_WORKER_DEV === "1";
 
-export default config;
+	return {
+		resolve: {
+			alias: {
+				"@": fileURLToPath(new URL("./src", import.meta.url)),
+			},
+		},
+		plugins: [
+			devtools(),
+			...(useCloudflare
+				? cloudflare({ viteEnvironment: { name: "ssr" } })
+				: []),
+			viteTsConfigPaths({
+				projects: ["./tsconfig.json"],
+			}),
+			tailwindcss(),
+			tanstackStart({
+				server: { entry: "entry-server" },
+			}),
+			viteReact({
+				babel: {
+					plugins: ["babel-plugin-react-compiler"],
+				},
+			}),
+		],
+	};
+});

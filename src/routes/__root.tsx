@@ -9,8 +9,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import Header from "../components/Header";
 import ClerkProvider from "../integrations/clerk/provider";
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
-import AiDevtools from "../lib/ai-devtools";
-import StoreDevtools from "../lib/demo-store-devtools";
+
 import appCss from "../styles.css?url";
 
 interface MyRouterContext {
@@ -61,8 +60,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 								name: "Tanstack Router",
 								render: <TanStackRouterDevtoolsPanel />,
 							},
-							AiDevtools,
-							StoreDevtools,
+
 							TanStackQueryDevtools,
 						]}
 					/>

@@ -3,7 +3,7 @@ import {
 	SignedOut,
 	SignInButton,
 	UserButton,
-} from "@clerk/clerk-react";
+} from "@clerk/tanstack-react-start";
 
 export default function HeaderUser() {
 	return (
