@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 async function getConfig(command: "serve" | "build"): Promise<UserConfig> {
-	const configFactory = (await import("../../vite.config")).default as (args: {
+	const configFactory = (await import("./vite.config")).default as (args: {
 		command: "serve" | "build";
 	}) => UserConfig;
 	return configFactory({ command });
@@ -22,7 +22,13 @@ async function getConfig(command: "serve" | "build"): Promise<UserConfig> {
 
 function hasCloudflarePlugin(config: UserConfig): boolean {
 	const plugins = config.plugins ?? [];
-	return plugins.some((plugin) => plugin?.name?.includes("cloudflare"));
+	const flattened = Array.isArray(plugins) ? plugins.flat() : [plugins];
+	return flattened.some((plugin) => {
+		if (!plugin || typeof plugin !== "object") return false;
+		return "name" in plugin && typeof plugin.name === "string"
+			? plugin.name.includes("cloudflare")
+			: false;
+	});
 }
 
 describe("vite.config cloudflare plugin", () => {

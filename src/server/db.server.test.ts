@@ -21,11 +21,15 @@ import { createClient } from "@libsql/client/node";
 import { getStartContext } from "@tanstack/start-storage-context";
 import { drizzle as drizzleD1 } from "drizzle-orm/d1";
 import { drizzle as drizzleLibsql } from "drizzle-orm/libsql";
-import { getDb } from "../db.server";
+import { getDb } from "./db.server";
 
-const mockD1Db = { name: "d1-db" };
-const mockLibsqlDb = { name: "libsql-db" };
-const mockClient = { name: "libsql-client" };
+const mockD1Db = { name: "d1-db" } as unknown as ReturnType<typeof drizzleD1>;
+const mockLibsqlDb = {
+	name: "libsql-db",
+} as unknown as ReturnType<typeof drizzleLibsql>;
+const mockClient = {
+	name: "libsql-client",
+} as unknown as ReturnType<typeof createClient>;
 
 const drizzleD1Mock = vi.mocked(drizzleD1);
 const drizzleLibsqlMock = vi.mocked(drizzleLibsql);
@@ -50,7 +54,7 @@ describe("getDb", () => {
 		const d1 = { name: "d1-binding" };
 		getStartContextMock.mockReturnValue({
 			contextAfterGlobalMiddlewares: { cloudflare: { env: { DB: d1 } } },
-		});
+		} as unknown as ReturnType<typeof getStartContext>);
 
 		const result = await getDb();
 
@@ -64,7 +68,9 @@ describe("getDb", () => {
 	});
 
 	it("falls back to Libsql when D1 is unavailable", async () => {
-		getStartContextMock.mockReturnValue(undefined);
+		getStartContextMock.mockReturnValue(
+			undefined as unknown as ReturnType<typeof getStartContext>,
+		);
 		process.env.LIBSQL_URL = "file:./dev.db";
 
 		const result = await getDb();
@@ -81,7 +87,9 @@ describe("getDb", () => {
 
 	it("uses D1 from global env when start context is missing", async () => {
 		const d1 = { name: "d1-global-binding" };
-		getStartContextMock.mockReturnValue(undefined);
+		getStartContextMock.mockReturnValue(
+			undefined as unknown as ReturnType<typeof getStartContext>,
+		);
 		(globalThis as typeof globalThis & { __CF_ENV__?: unknown }).__CF_ENV__ = {
 			DB: d1,
 		};

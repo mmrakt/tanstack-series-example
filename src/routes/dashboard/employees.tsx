@@ -1,7 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataGrid } from "@/components/DataGrid";
-import { getEmployees } from "@/functions/dashboard";
+import { employeesQueryOptions } from "@/queries/dashboard";
 
 type Employee = typeof import("@/db/schema").employees.$inferSelect;
 
@@ -16,17 +17,21 @@ const columns = [
 	}),
 	columnHelper.accessor("joinedAt", {
 		header: "Joined At",
-		cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+		cell: (info) => {
+			const value = info.getValue();
+			return value ? new Date(value).toLocaleDateString() : "-";
+		},
 	}),
 ];
 
 export const Route = createFileRoute("/dashboard/employees")({
 	component: EmployeesPage,
-	loader: async () => await getEmployees(),
+	loader: async ({ context }) =>
+		await context.queryClient.ensureQueryData(employeesQueryOptions()),
 });
 
 function EmployeesPage() {
-	const employees = Route.useLoaderData();
+	const { data: employees = [] } = useQuery(employeesQueryOptions());
 
 	return (
 		<div className="p-8">

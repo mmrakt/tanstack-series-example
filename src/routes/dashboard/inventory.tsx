@@ -1,7 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataGrid } from "@/components/DataGrid";
-import { getInventory } from "@/functions/dashboard";
+import { inventoryQueryOptions } from "@/queries/dashboard";
 
 type InventoryItem = typeof import("@/db/schema").inventory.$inferSelect;
 
@@ -28,17 +29,21 @@ const columns = [
 	}),
 	columnHelper.accessor("updatedAt", {
 		header: "Last Updated",
-		cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+		cell: (info) => {
+			const value = info.getValue();
+			return value ? new Date(value).toLocaleDateString() : "-";
+		},
 	}),
 ];
 
 export const Route = createFileRoute("/dashboard/inventory")({
 	component: InventoryPage,
-	loader: async () => await getInventory(),
+	loader: async ({ context }) =>
+		await context.queryClient.ensureQueryData(inventoryQueryOptions()),
 });
 
 function InventoryPage() {
-	const inventory = Route.useLoaderData();
+	const { data: inventory = [] } = useQuery(inventoryQueryOptions());
 
 	return (
 		<div className="p-8">

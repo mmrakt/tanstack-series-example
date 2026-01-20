@@ -16,7 +16,7 @@ export default {
 					env,
 					ctx,
 				},
-			},
+			} as unknown as Record<string, unknown>,
 		});
 	},
 };

@@ -1,0 +1,3 @@
+- When a file (especially route/page components) becomes large or mixes multiple concerns, proactively refactor it into smaller components and colocated modules.
+- Keep UI, data logic, and editor/forms separated into focused components to maintain readability and testability.
+- Colocate tests next to their implementation files; keep shared helpers/utility test code in its current location.

@@ -2,12 +2,10 @@
 
 import { getTableConfig } from "drizzle-orm/sqlite-core";
 import { describe, expect, it } from "vitest";
-import { employees, inventory, projects } from "../schema";
+import { employees, inventory, projects } from "./schema";
 
 function getIndexNames(table: Parameters<typeof getTableConfig>[0]) {
-	return getTableConfig(table).indexes.map(
-		(idx) => idx.name ?? idx.config?.name ?? "",
-	);
+	return getTableConfig(table).indexes.map((idx) => idx.config?.name ?? "");
 }
 
 describe("schema indexes", () => {
