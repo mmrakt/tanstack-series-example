@@ -15,12 +15,12 @@ import {
 	type ProjectUpdateInput,
 	projectStatuses,
 	validateProjectUpdate,
-} from "@/utils/project-form";
+} from "@/features/projects/schema";
 import {
 	budgetRange,
 	currencyFormatter,
 	type Project,
-} from "./projects-shared";
+} from "@/features/projects/shared";
 
 type ProjectEditorProps = {
 	project: Project | null;

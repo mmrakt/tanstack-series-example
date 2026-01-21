@@ -1,8 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataGrid } from "@/components/DataGrid";
-import { employeesQueryOptions } from "@/queries/dashboard";
+import { useCollections } from "@/db-collections/provider";
+import { employeesQueryOptions } from "@/features/employees/queries";
 
 type Employee = typeof import("@/db/schema").employees.$inferSelect;
 
@@ -31,7 +32,8 @@ export const Route = createFileRoute("/dashboard/employees")({
 });
 
 function EmployeesPage() {
-	const { data: employees = [] } = useQuery(employeesQueryOptions());
+	const { employees: employeesCollection } = useCollections();
+	const { data: employees = [] } = useLiveQuery(employeesCollection);
 
 	return (
 		<div className="p-8">

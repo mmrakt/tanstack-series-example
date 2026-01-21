@@ -21,7 +21,7 @@ import { createClient } from "@libsql/client/node";
 import { getStartContext } from "@tanstack/start-storage-context";
 import { drizzle as drizzleD1 } from "drizzle-orm/d1";
 import { drizzle as drizzleLibsql } from "drizzle-orm/libsql";
-import { getDb } from "./db.server";
+import { getDb } from "./index";
 
 const mockD1Db = { name: "d1-db" } as unknown as ReturnType<typeof drizzleD1>;
 const mockLibsqlDb = {

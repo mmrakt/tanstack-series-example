@@ -1,8 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute } from "@tanstack/react-router";
 import { createColumnHelper } from "@tanstack/react-table";
 import { DataGrid } from "@/components/DataGrid";
-import { inventoryQueryOptions } from "@/queries/dashboard";
+import { useCollections } from "@/db-collections/provider";
+import { inventoryQueryOptions } from "@/features/inventory/queries";
 
 type InventoryItem = typeof import("@/db/schema").inventory.$inferSelect;
 
@@ -43,7 +44,8 @@ export const Route = createFileRoute("/dashboard/inventory")({
 });
 
 function InventoryPage() {
-	const { data: inventory = [] } = useQuery(inventoryQueryOptions());
+	const { inventory: inventoryCollection } = useCollections();
+	const { data: inventory = [] } = useLiveQuery(inventoryCollection);
 
 	return (
 		<div className="p-8">

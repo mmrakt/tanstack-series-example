@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute } from "@tanstack/react-router";
 import {
 	type ColumnFiltersState,
@@ -8,38 +8,21 @@ import {
 } from "@tanstack/react-table";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { updateProject } from "@/functions/dashboard";
-import { projectsQueryKey, projectsQueryOptions } from "@/queries/dashboard";
-import type { ProjectUpdateInput } from "@/utils/project-form";
+import { useCollections } from "@/db-collections/provider";
+import { ProjectEditor } from "@/features/projects/components/ProjectEditor";
+import { ProjectsSummary } from "@/features/projects/components/ProjectsSummary";
+import { ProjectsTable } from "@/features/projects/components/ProjectsTable";
+import { projectsQueryOptions } from "@/features/projects/queries";
+import type { ProjectUpdateInput } from "@/features/projects/schema";
+import { currencyFormatter, type Project } from "@/features/projects/shared";
 import {
 	type BudgetRangeFilter,
 	budgetRangeFilter,
 	projectMatchesGlobalFilter,
 	summarizeProjects,
-} from "@/utils/project-table";
-import { ProjectEditor } from "./_components/ProjectEditor";
-import { ProjectsSummary } from "./_components/ProjectsSummary";
-import { ProjectsTable } from "./_components/ProjectsTable";
-import { currencyFormatter, type Project } from "./_components/projects-shared";
+} from "@/features/projects/table-utils";
 
 const columnHelper = createColumnHelper<Project>();
-
-type ProjectPatch = Pick<Project, "id"> & Partial<Project>;
-type UpdateProjectContext = { previousProjects?: Project[] };
-
-function updateProjectInList(
-	projects: Project[] | undefined,
-	update: ProjectPatch,
-) {
-	if (!projects) return projects;
-	let found = false;
-	const next = projects.map((project) => {
-		if (project.id !== update.id) return project;
-		found = true;
-		return { ...project, ...update };
-	});
-	return found ? next : projects;
-}
 
 export const Route = createFileRoute("/dashboard/projects")({
 	component: ProjectsPage,
@@ -48,10 +31,11 @@ export const Route = createFileRoute("/dashboard/projects")({
 });
 
 function ProjectsPage() {
-	const queryClient = useQueryClient();
-	const { data: projects = [] } = useQuery(projectsQueryOptions());
+	const { projects: projectsCollection } = useCollections();
+	const { data: projects = [], collection } = useLiveQuery(projectsCollection);
 	const [editingId, setEditingId] = React.useState<number | null>(null);
 	const [saveError, setSaveError] = React.useState<string | null>(null);
+	const [savingId, setSavingId] = React.useState<number | null>(null);
 	const [globalFilter, setGlobalFilter] = React.useState("");
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnVisibility, setColumnVisibility] =
@@ -65,11 +49,6 @@ function ProjectsPage() {
 	const budgetMinId = React.useId();
 	const budgetMaxId = React.useId();
 
-	const selectedProject = React.useMemo(
-		() => projects.find((project) => project.id === editingId) ?? null,
-		[editingId, projects],
-	);
-
 	const budgetFilter = React.useMemo<BudgetRangeFilter>(() => {
 		const minValue = Number.parseInt(budgetMin, 10);
 		const maxValue = Number.parseInt(budgetMax, 10);
@@ -78,6 +57,11 @@ function ProjectsPage() {
 			max: Number.isNaN(maxValue) ? undefined : maxValue,
 		};
 	}, [budgetMin, budgetMax]);
+
+	const selectedProject = React.useMemo(
+		() => projects.find((project) => project.id === editingId) ?? null,
+		[editingId, projects],
+	);
 
 	const columnFilters = React.useMemo<ColumnFiltersState>(() => {
 		const nextFilters: ColumnFiltersState = [];
@@ -110,45 +94,6 @@ function ProjectsPage() {
 		() => summarizeProjects(filteredProjects),
 		[filteredProjects],
 	);
-
-	const updateProjectMutation = useMutation<
-		Project,
-		Error,
-		ProjectUpdateInput,
-		UpdateProjectContext
-	>({
-		mutationFn: (values: ProjectUpdateInput) => updateProject({ data: values }),
-		onMutate: async (values) => {
-			setSaveError(null);
-			await queryClient.cancelQueries({ queryKey: projectsQueryKey });
-			const previousProjects =
-				queryClient.getQueryData<Project[]>(projectsQueryKey);
-			queryClient.setQueryData<Project[] | undefined>(
-				projectsQueryKey,
-				(current) => updateProjectInList(current, values),
-			);
-			return { previousProjects };
-		},
-		onError: (_error, _values, context) => {
-			if (context?.previousProjects) {
-				queryClient.setQueryData(projectsQueryKey, context.previousProjects);
-			}
-			setSaveError("Failed to save changes. Please try again.");
-		},
-		onSuccess: (updated) => {
-			queryClient.setQueryData<Project[] | undefined>(
-				projectsQueryKey,
-				(current) => updateProjectInList(current, updated),
-			);
-		},
-		onSettled: () => {
-			void queryClient.invalidateQueries({ queryKey: projectsQueryKey });
-		},
-	});
-
-	const savingId = updateProjectMutation.isPending
-		? (updateProjectMutation.variables?.id ?? null)
-		: null;
 
 	const columns = React.useMemo(
 		() => [
@@ -229,9 +174,29 @@ function ProjectsPage() {
 	}, []);
 
 	const handleSave = React.useCallback(
-		async (values: ProjectUpdateInput) =>
-			await updateProjectMutation.mutateAsync(values),
-		[updateProjectMutation],
+		async (values: ProjectUpdateInput) => {
+			setSaveError(null);
+			setSavingId(values.id);
+			try {
+				const tx = collection.update(values.id, (draft) => {
+					draft.name = values.name;
+					draft.budget = values.budget;
+					draft.status = values.status;
+				});
+				await tx.isPersisted.promise;
+				const updated = collection.get(values.id);
+				if (!updated) {
+					throw new Error("Project not found");
+				}
+				return updated;
+			} catch (error) {
+				setSaveError("Failed to save changes. Please try again.");
+				throw error;
+			} finally {
+				setSavingId(null);
+			}
+		},
+		[collection],
 	);
 
 	return (
@@ -269,7 +234,7 @@ function ProjectsPage() {
 				/>
 				<ProjectEditor
 					project={selectedProject}
-					isSaving={updateProjectMutation.isPending}
+					isSaving={savingId !== null}
 					onClose={() => setEditingId(null)}
 					onSave={handleSave}
 				/>

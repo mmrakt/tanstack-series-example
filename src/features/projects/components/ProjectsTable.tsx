@@ -9,14 +9,14 @@ import {
 } from "@tanstack/react-table";
 import * as React from "react";
 import { DataGrid } from "@/components/DataGrid";
-import type { ProjectUpdateInput } from "@/utils/project-form";
-import type { BudgetRangeFilter } from "@/utils/project-table";
+import type { ProjectUpdateInput } from "@/features/projects/schema";
+import type { Project } from "@/features/projects/shared";
+import type { BudgetRangeFilter } from "@/features/projects/table-utils";
 import {
 	budgetRangeFilter,
 	projectMatchesGlobalFilter,
-} from "@/utils/project-table";
+} from "@/features/projects/table-utils";
 import { ProjectsToolbar } from "./ProjectsToolbar";
-import type { Project } from "./projects-shared";
 
 type ProjectsTableProps = {
 	projects: Project[];

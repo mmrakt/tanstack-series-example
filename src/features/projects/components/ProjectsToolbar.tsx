@@ -9,9 +9,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { type ProjectUpdateInput, projectStatuses } from "@/utils/project-form";
-import type { Project } from "./projects-shared";
-import { budgetRange } from "./projects-shared";
+import {
+	type ProjectUpdateInput,
+	projectStatuses,
+} from "@/features/projects/schema";
+import type { Project } from "@/features/projects/shared";
+import { budgetRange } from "@/features/projects/shared";
 
 type ProjectsToolbarProps = {
 	table: Table<Project>;

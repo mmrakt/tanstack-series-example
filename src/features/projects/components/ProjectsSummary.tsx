@@ -1,6 +1,6 @@
-import { projectStatuses } from "@/utils/project-form";
-import type { summarizeProjects } from "@/utils/project-table";
-import { currencyFormatter } from "./projects-shared";
+import { projectStatuses } from "@/features/projects/schema";
+import { currencyFormatter } from "@/features/projects/shared";
+import type { summarizeProjects } from "@/features/projects/table-utils";
 
 type ProjectSummary = ReturnType<typeof summarizeProjects>;
 

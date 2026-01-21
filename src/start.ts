@@ -1,7 +1,7 @@
 import { clerkMiddleware } from "@clerk/tanstack-react-start/server";
 import { createStart } from "@tanstack/react-start";
 
-export default createStart(() => {
+export const startInstance = createStart(() => {
 	return {
 		requestMiddleware: [clerkMiddleware()],
 	};

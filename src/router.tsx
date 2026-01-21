@@ -1,5 +1,6 @@
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
+import { CollectionsProvider } from "./db-collections/provider";
 import * as TanstackQuery from "./integrations/tanstack-query/root-provider";
 
 // Import the generated route tree
@@ -16,6 +17,9 @@ export const getRouter = () => {
 		},
 
 		defaultPreload: "intent",
+		Wrap: ({ children }) => (
+			<CollectionsProvider>{children}</CollectionsProvider>
+		),
 	});
 
 	setupRouterSsrQueryIntegration({

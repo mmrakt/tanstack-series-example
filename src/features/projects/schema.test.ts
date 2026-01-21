@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
 	type ProjectUpdateInput,
+	projectsQuerySchema,
 	projectUpdateSchema,
 	validateProjectUpdate,
-} from "./project-form";
+} from "./schema";
 
 describe("projectUpdateSchema", () => {
 	it("accepts valid input", () => {
@@ -35,5 +36,26 @@ describe("projectUpdateSchema", () => {
 		expect(result?.fields.name).toBeTruthy();
 		expect(result?.fields.budget).toBeTruthy();
 		expect(result?.fields.status).toBeTruthy();
+	});
+});
+
+describe("projectsQuerySchema", () => {
+	it("accepts optional filters", () => {
+		expect(projectsQuerySchema.parse(undefined)).toBeUndefined();
+		expect(
+			projectsQuerySchema.parse({
+				search: "alpha",
+				status: "active",
+				budgetMin: 100,
+				budgetMax: 1000,
+				sort: [{ id: "name", desc: true }],
+			}),
+		).toEqual({
+			search: "alpha",
+			status: "active",
+			budgetMin: 100,
+			budgetMax: 1000,
+			sort: [{ id: "name", desc: true }],
+		});
 	});
 });

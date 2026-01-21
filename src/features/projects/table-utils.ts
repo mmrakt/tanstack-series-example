@@ -1,5 +1,5 @@
 import type { projects } from "@/db/schema";
-import { projectStatuses } from "./project-form";
+import { projectStatuses } from "./schema";
 
 type Project = typeof projects.$inferSelect;
 type ProjectStatus = (typeof projectStatuses)[number];

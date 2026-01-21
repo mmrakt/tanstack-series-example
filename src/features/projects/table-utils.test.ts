@@ -3,7 +3,7 @@ import {
 	budgetRangeFilter,
 	projectMatchesGlobalFilter,
 	summarizeProjects,
-} from "./project-table";
+} from "./table-utils";
 
 type Project = Parameters<typeof summarizeProjects>[0][number];
 
